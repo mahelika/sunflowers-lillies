@@ -85,14 +85,21 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
-            const body = (pr.body || "");
 
-            // 1. Require issue reference in PR body (e.g. "Fixes #123" or just "#123")
-            const match = body.match(/#(\d+)/);
+            const title = pr.title || "";
+            const body = pr.body || "";
+
+            // 🔍 Look for #123 in BOTH title and body
+            const text = `${title}\n${body}`;
+            const match = text.match(/#(\d+)/);
+
             if (!match) {
               core.setFailed(
-                "PR must reference an issue (e.g. `Fixes #123` or `#123`) in the description."
+                "PR must reference an issue (e.g. `Fixes #123` or `#123`) " +
+                "in the PR title or description. Comments are not scanned."
               );
+              core.info(`PR title: ${title}`);
+              core.info(`PR body: ${body}`);
               return;
             }
 
